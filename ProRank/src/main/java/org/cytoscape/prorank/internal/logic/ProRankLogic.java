@@ -66,35 +66,31 @@ public class ProRankLogic extends Thread{
         List<CyNode> processedNodes = new ArrayList<CyNode>();
         
         Iterator<Map.Entry<CyNode, Double>> it = prScoreMapSorted.entrySet().iterator();
+        
+        CyNetwork updatedNet = network;
+        
         while (it.hasNext()) {
             Map.Entry<CyNode, Double> pair = it.next();
             sourceNode = pair.getKey();
             
-            /* TODO
-            if(bridgeNodes.contains(sourceNode)) {
+            if(!updatedNet.containsNode(sourceNode)) {
                 continue;
             }
-            */
+            
             if(stop) {
                 return;
             }
-            neighbourNodes = network.getNeighborList(sourceNode, CyEdge.Type.ANY);
+            
+            neighbourNodes = updatedNet.getNeighborList(sourceNode, CyEdge.Type.ANY);
             neighbourNodes.add(sourceNode);
             
-            if(validate(processedNodes, neighbourNodes) == false) {
+            neighbourEdges = findNeighbourEdges(neighbourNodes, updatedNet);
+            if(neighbourEdges.size() < 3) {
                 continue;
             }
-            neighbourEdges = findNeighbourEdges(neighbourNodes);
-            
-            
-            if(neighbourEdges.size() < 2) {
-                continue;
-            }
-
-
             subNet = root.addSubNetwork(neighbourNodes, neighbourEdges);
             complexes.add(new Complex(subNet));
-            processedNodes.addAll(neighbourNodes);
+            updatedNet = ConnectivityTest.getNetworkMinusNodes(updatedNet, neighbourNodes);
         }
         
         if(stop) {
@@ -115,7 +111,7 @@ public class ProRankLogic extends Thread{
     
    
     
-    private List<CyEdge> findNeighbourEdges(List<CyNode> neightbourNodes) {
+    private List<CyEdge> findNeighbourEdges(List<CyNode> neightbourNodes, CyNetwork updatedNet) {
         List<CyEdge> edgeList = network.getEdgeList();
         List<CyEdge> neighbourEges = new ArrayList<CyEdge>();
         

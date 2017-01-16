@@ -38,25 +38,9 @@ public class ConnectivityTest {
     
     
     public static int getCompNetworkMinusNode(CyNetwork network, CyNode n) {
-        CyRootNetwork root = ((CySubNetwork)network).getRootNetwork();
-        CyNetwork subNet;
-        
-        List<CyNode> nodes = network.getNodeList();
-        nodes.remove(n);
-        
-        List<CyEdge> edges = network.getEdgeList();
-        List<CyEdge> edgesToRemove = new ArrayList<CyEdge>(edges);
-        
-        for(CyEdge e : edges) {
-            if(e.getSource().equals(n) || e.getTarget().equals(n)) {
-                edgesToRemove.add(e);
-            }
-        }
-        
-        edges.removeAll(edgesToRemove);
-        
-        subNet = root.addSubNetwork(nodes, edges);
-        return getComp(subNet);
+        List<CyNode> nodeToRemove = new ArrayList<CyNode>();
+        nodeToRemove.add(n);
+        return getComp(getNetworkMinusNodes(network, nodeToRemove));
     }
     
     
@@ -65,11 +49,18 @@ public class ConnectivityTest {
         CyRootNetwork root = ((CySubNetwork)network).getRootNetwork();
         CyNetwork subNet;
         
-        List<CyNode> nodes = network.getNodeList();
-        nodes.removeAll(nodesToRemove);
+        List<CyNode> nodeList = network.getNodeList();
+        List<CyEdge> edgeList = network.getEdgeList();
         
-        List<CyEdge> edges = network.getEdgeList();
-        List<CyEdge> edgesToRemove = new ArrayList<CyEdge>(edges);
+        List<CyNode> nodes = new ArrayList<CyNode>(nodeList);
+        List<CyEdge> edges = new ArrayList<CyEdge>(edgeList);
+        
+        for(CyNode unwantedNode : nodesToRemove) {
+            nodes.remove(unwantedNode);
+        }
+        
+        
+        List<CyEdge> edgesToRemove = new ArrayList<CyEdge>();
         
         for(CyEdge e : edges) {
             if(nodesToRemove.contains(e.getSource()) || nodesToRemove.contains(e.getTarget())) {
@@ -77,7 +68,10 @@ public class ConnectivityTest {
             }
         }
         
-        edges.removeAll(edgesToRemove);
+        for(CyEdge unwantedEdge : edgesToRemove) {
+            edges.remove(unwantedEdge);
+        }
+        
         
         subNet = root.addSubNetwork(nodes, edges);
         return subNet;
